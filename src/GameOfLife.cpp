@@ -28,6 +28,7 @@ GameOfLife::GameOfLife(sf::RenderWindow &window)
 
     // Initialize VertexArray
     quad = sf::VertexArray(sf::Quads, rows * cols * 4);
+
     // Fill VertexArray
     int currentCellStartingQuad = 0;
     for(int row = 0; row < rows; row++)
@@ -51,7 +52,6 @@ GameOfLife::GameOfLife(sf::RenderWindow &window)
         }
     }
 }
-
 
 void GameOfLife::draw(sf::RenderWindow& window)
 {
