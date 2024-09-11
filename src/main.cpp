@@ -2,13 +2,13 @@
 #include "SFML/Graphics.hpp"
 #include "GameOfLife.hpp"
 
-void inputHandler(sf::Event event);
+void inputHandler(sf::Event& event, GameOfLife& gol, bool& paused);
 
 int main()
 {
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode(1600, 900), "SFML window");
-    window.setFramerateLimit(15);
+    sf::RenderWindow window(sf::VideoMode(1601, 901), "SFML window");
+    window.setFramerateLimit(10);
 
     // Seed rand() for the generation of randomness in starting cells
     // Bad seed / generation doesn't matter for my purpose
@@ -45,14 +45,7 @@ int main()
             }
             else if (event.type == sf::Event::KeyPressed)
             {
-                // TODO
-                //  Implement some form of inputhandling
-                //  What inputs do I even need to handle?
-                if(event.key.scancode == sf::Keyboard::Scan::Space)
-                {
-                    simulationPaused = !simulationPaused;
-                }
-                inputHandler(event);
+                inputHandler(event, gameOfLife, simulationPaused);
             }
         }
 
@@ -76,6 +69,28 @@ int main()
     return EXIT_SUCCESS;
 }
 
-void inputHandler(sf::Event event) {
+// TODO
+//   We need to think about GameState struct and give that to inputHandler
+//   Alternatively use the GameOfLife class to handle GameState
+void inputHandler(sf::Event& event, GameOfLife& gol, bool& paused) {
     std::cout << event.key.code << std::endl;
+    switch(event.key.scancode)
+    {
+        case sf::Keyboard::Scan::Space:
+            paused = !paused;
+            break;
+        case sf::Keyboard::Scan::R:
+            if(paused)
+                gol.randomizeBoard();
+            break;
+        case sf::Keyboard::Scan::C:
+            if(paused)
+                gol.clearBoard();
+            break;
+        case sf::Keyboard::Scan::F:
+            if(paused)
+                gol.update();
+        default:
+            break;
+    }
 }
