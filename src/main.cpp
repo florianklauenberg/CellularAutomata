@@ -21,7 +21,7 @@ int main()
     bool simulationPaused = false;
     sf::Color CELL_BORDER_COLOR = {0, 0, 0};
 
-    // Start the game loop
+    // Start the game loop blablabla
     while (window.isOpen())
     {
         // Process events
