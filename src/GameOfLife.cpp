@@ -3,15 +3,17 @@
 GameOfLife::GameOfLife(sf::RenderWindow &window)
 {
     // Initialize cols and rows
-    float width = window.getSize().x;
-    float height = window.getSize().y;
-    cols = width / tileSize;
-    rows = height / tileSize;
+    int width = window.getSize().x;
+    int height = window.getSize().y;        // TODO
+    cols = (width - 1) / (tileSize + 1);    //  Problem: Because of the cellborders it is harder to calculate cols and rows properly
+    rows = (height - 1) / (tileSize + 1);   //  First implementation just cut off some pixels (or at small tileSize cells) on the right and bottom
+                                            //  Now we have to add one to our ScreenSize in the main and choose the tileSize carefully, but it works as intended
 
-    currentBoard = new int* [rows];
-    nextBoard = new int* [rows];
+    // std::cout << "rows: " << rows << " cols: " << cols << std::endl;
 
     // Initialize Board
+    currentBoard = new int* [rows];
+    nextBoard = new int* [rows];
     for(int row = 0; row < rows; row++)
     {
         currentBoard[row] = new int[cols];
@@ -20,7 +22,7 @@ GameOfLife::GameOfLife(sf::RenderWindow &window)
         {
             currentBoard[row][col] = 0;
             // Approximately 30% of Cells (randomly chosen) set alive
-            if(rand() % 10 < 3)
+            if(rand() % 100 < 30)
                 currentBoard[row][col] = 1;
             nextBoard[row][col] = currentBoard[row][col];
         }
@@ -28,8 +30,6 @@ GameOfLife::GameOfLife(sf::RenderWindow &window)
 
     // Initialize VertexArray
     quad = sf::VertexArray(sf::Quads, rows * cols * 4);
-
-    // Fill VertexArray
     int currentCellStartingQuad = 0;
     for(int row = 0; row < rows; row++)
     {
@@ -60,6 +60,7 @@ void GameOfLife::draw(sf::RenderWindow& window)
 
 void GameOfLife::update()
 {
+    // Logical rules of Game
      for(int row = 0; row < rows; row++)
      {
          for(int col = 0; col < cols; col++)
@@ -74,21 +75,77 @@ void GameOfLife::update()
              {
                  if(neighborCount < 2)
                      nextBoard[row][col] = 0;
-                 // if(neighborCount == 3 || neighborCount == 4)
-                 //    nextGrid[roe][col] = 1
+                 // if(neighborCount == 2 || neighborCount == 3)
+                 //    nextGrid[row][col] = 1
                  // Not needed because no change and every other case is handled
                  if(neighborCount > 3)
                      nextBoard[row][col] = 0;
              }
              //Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-             else if(currentBoard[row][col] == 0 && neighborCount == 3)
+             else if(neighborCount == 3)
              {
                  nextBoard[row][col] = 1;
              }
          }
      }
+    updateQuadsAndCurrentBoard();
+}
 
-     // Copy nextBoard into Board and update Colors
+int GameOfLife::getLivingNeighborCount(int row, int col)
+{
+    // Define all 8 possible offsets for neighbors
+    int rowOffsets[8] = {-1, -1, -1, 0 , 0, 1, 1, 1};
+    int colOffsets[8] = {-1 , 0, 1, -1 , 1, -1 , 0, 1};
+
+    // Go through every neighbor
+    int count = 0;
+    for(int offsetCounter = 0; offsetCounter < 8; offsetCounter++)
+    {
+        // Calculate current neighbor with offsets
+        int neighborRow = row + rowOffsets[offsetCounter];
+        int neighborCol = col + colOffsets[offsetCounter];
+        // Check board constraints
+        if(neighborRow < 0 || neighborRow > rows - 1 || neighborCol < 0 || neighborCol > cols - 1)
+            continue;
+        // Count
+        if(currentBoard[neighborRow][neighborCol] == 1)
+            count++;
+    }
+    return count;
+}
+
+void GameOfLife::clearBoard()
+{
+    for(int row = 0; row < rows; row++)
+    {
+        for(int col = 0; col < cols; col++)
+        {
+            currentBoard[row][col] = 0;
+            nextBoard[row][col] = 0;
+        }
+    }
+    updateQuadsAndCurrentBoard();
+}
+
+void GameOfLife::randomizeBoard()
+{
+    for(int row = 0; row < rows; row++)
+    {
+        for(int col = 0; col < cols; col++)
+        {
+            // Approximately 30% of Cells (randomly chosen) set alrive
+            if(rand() % 100 < 30)
+                currentBoard[row][col] = 1;
+            else
+                currentBoard[row][col] = 0;
+            nextBoard[row][col] = currentBoard[row][col];
+        }
+    }
+    updateQuadsAndCurrentBoard();
+}
+
+void GameOfLife::updateQuadsAndCurrentBoard()
+{
     int currentCellStartingQuad = 0;
     for(int row = 0; row < rows; row++)
     {
@@ -113,29 +170,5 @@ void GameOfLife::update()
             currentCellStartingQuad += 4;
         }
     }
-}
-
-int GameOfLife::getLivingNeighborCount(int row, int col)
-{
-    // Define all 8 possible offsets for neighbors
-    int rowOffsets[8] = {-1, -1, -1, 0 , 0, 1, 1, 1};
-    int colOffsets[8] = {-1 , 0, 1, -1 , 1, -1 , 0, 1};
-
-    // Go through every neighbor
-    int count = 0;
-    for(int offsetCounter = 0; offsetCounter < 8; offsetCounter++)
-    {
-        // Calculate current neighbor with offsets
-        int neighborRow = row + rowOffsets[offsetCounter];
-        int neighborCol = col + colOffsets[offsetCounter];
-
-        // Check board constraints
-        if(neighborRow < 0 || neighborRow > rows - 1 || neighborCol < 0 || neighborCol > cols - 1)
-            continue;
-        // Count
-        if(currentBoard[neighborRow][neighborCol] == 1)
-            count++;
-    }
-    return count;
 }
 
